@@ -10,7 +10,7 @@ def MAE(y, yhat):
     mae = mean_absolute_error(y, yhat)
     meany = np.mean(y)
     maepercent = mae/meany
-    return f'MAE%: {maepercent:.3f}'
+    return np.round(maepercent, decimals=3)
 
 
 def MAPE(y, yhat):
@@ -18,8 +18,11 @@ def MAPE(y, yhat):
     Mean Absolute Percentage Error
     y is ground truth and yhat is prediction
     """
-    mape = mean_absolute_percentage_error(y, yhat)
-    return f'MAPE: {mape:.3f}'
+    #mape = mean_absolute_percentage_error(y, yhat)
+    ape = np.abs(yhat - y)/y
+    ape = ape.replace([-np.inf, np.inf], 0)
+    mape = np.mean(ape)
+    return np.round(mape, decimals=3)
 
 
 
@@ -31,7 +34,7 @@ def RMSE(y, yhat):
     rmse = np.sqrt(mean_squared_error(y, yhat))
     meany = np.mean(y)
     rmsepercent = rmse/meany
-    return f'RMSE%: {rmsepercent:.3f}'
+    return np.round(rmsepercent, decimals=3)
 
 
 class Time:
