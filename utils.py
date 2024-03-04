@@ -16,6 +16,7 @@ def MAE(y, yhat):
 def MAPE(y, yhat):
     """
     Mean Absolute Percentage Error
+    y is ground truth and yhat is prediction
     """
     mape = mean_absolute_percentage_error(y, yhat)
     return f'MAPE: {mape:.3f}'
