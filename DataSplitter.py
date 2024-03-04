@@ -7,6 +7,7 @@ def readData(agglevel):
     df = df.sort_values(by=['line', 'datetime'])
     return df
 
+
 def getTrainData(agglevel=60, train_test_split='2023-10-01', start_date='2021-06-27', hours_to_exclude=[1, 2, 3, 4]):
     assert start_date <= train_test_split, 'Invalid days'
 
@@ -16,6 +17,7 @@ def getTrainData(agglevel=60, train_test_split='2023-10-01', start_date='2021-06
 
     df = df[(df['date'] >= start_date) & (df['date'] < train_test_split)]
     return df
+
 
 def getTestData(agglevel=60, train_test_split='2023-10-01', end_date='2023-12-31', hours_to_exclude=[1, 2, 3, 4]):
     assert train_test_split <= end_date, 'Invalid days'
@@ -27,13 +29,21 @@ def getTestData(agglevel=60, train_test_split='2023-10-01', end_date='2023-12-31
     df = df[(df['date'] >= train_test_split) & (df['date'] <= end_date)]
     return df
 
-def performTrainValSplit(df, train_val_split=''):
-    raise NotImplementedError
-    #return df_train, df_val
+
+def performTrainValSplit(df, train_val_split='2023-07-01'):
+
+    df_train = df[df['date'] < train_val_split]
+    df_val = df[df['date'] >= train_val_split]
+
+    return df_train, df_val
+
 
 def excludeHours(df, hours_to_exclude):
+
     df = df[~df['hour'].isin(hours_to_exclude)]
+    
     return df
+
 
 def addFeatures(df, agglevel):
     # 1-difference
