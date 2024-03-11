@@ -13,7 +13,7 @@ def getTrainData(agglevel=60, train_test_split='2023-10-01', start_date='2021-06
 
     df = readData(agglevel)
     df = excludeHours(df, hours_to_exclude)
-    df = addFeatures(df, agglevel)
+    #df = addFeatures(df, agglevel)
 
     df = df[(df['date'] >= start_date) & (df['date'] < train_test_split)]
     return df
@@ -24,7 +24,7 @@ def getTestData(agglevel=60, train_test_split='2023-10-01', end_date='2023-12-31
 
     df = readData(agglevel)
     df = excludeHours(df, hours_to_exclude)
-    df = addFeatures(df, agglevel)
+    #df = addFeatures(df, agglevel)
 
     df = df[(df['date'] >= train_test_split) & (df['date'] <= end_date)]
     return df
