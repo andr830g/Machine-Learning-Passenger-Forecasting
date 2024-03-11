@@ -96,8 +96,12 @@ def fixedWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
     if lags:
         for lag in lags:
             X_train_temp[f'lag_{lag}'] = y_train.shift(periods=lag).fillna(0)
-    model.fit(X_train_temp, y_train)
-    y_train_pred = model.predict(X_train_temp)
+    
+    X_train_temp_transformed = pd.DataFrame(exog_scalar.fit_transform(X_train_temp), columns=X_train_temp.columns)
+    y_train_temp_transformed = scalar.fit_transform(y_train.to_numpy().reshape(-1, 1))
+    model.fit(X_train_temp_transformed, y_train_temp_transformed)
+    y_train_pred_transformed = model.predict(X_train_temp_transformed).reshape(-1, 1)
+    y_train_pred = pd.Series(scalar.inverse_transform(y_train_pred_transformed).squeeze(1))
 
     # round and cut off
     y_train_pred = y_train_pred.round()
@@ -147,8 +151,12 @@ def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
     if lags:
         for lag in lags:
             X_train_temp[f'lag_{lag}'] = y_train.shift(periods=lag).fillna(0)
-    model.fit(X_train_temp, y_train)
-    y_train_pred = model.predict(X_train_temp)
+    
+    X_train_temp_transformed = pd.DataFrame(exog_scalar.fit_transform(X_train_temp), columns=X_train_temp.columns)
+    y_train_temp_transformed = scalar.fit_transform(y_train.to_numpy().reshape(-1, 1))
+    model.fit(X_train_temp_transformed, y_train_temp_transformed)
+    y_train_pred_transformed = model.predict(X_train_temp_transformed).reshape(-1, 1)
+    y_train_pred = pd.Series(scalar.inverse_transform(y_train_pred_transformed).squeeze(1))
 
     # round and cut off
     y_train_pred = y_train_pred.round()
@@ -197,8 +205,12 @@ def slidingWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
     if lags:
         for lag in lags:
             X_train_temp[f'lag_{lag}'] = y_train.shift(periods=lag).fillna(0)
-    model.fit(X_train_temp, y_train)
-    y_train_pred = model.predict(X_train_temp)
+    
+    X_train_temp_transformed = pd.DataFrame(exog_scalar.fit_transform(X_train_temp), columns=X_train_temp.columns)
+    y_train_temp_transformed = scalar.fit_transform(y_train.to_numpy().reshape(-1, 1))
+    model.fit(X_train_temp_transformed, y_train_temp_transformed)
+    y_train_pred_transformed = model.predict(X_train_temp_transformed).reshape(-1, 1)
+    y_train_pred = pd.Series(scalar.inverse_transform(y_train_pred_transformed).squeeze(1))
 
     # round and cut off train and val predictions
     y_train_pred = y_train_pred.round()
