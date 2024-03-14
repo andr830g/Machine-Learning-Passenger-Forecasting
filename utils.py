@@ -60,59 +60,93 @@ class Time:
 
 
 def fixedWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
-                               horizon, differentiation=None, lags=None, scalar=None, exog_scalar=None):
-    # initiate forecaster
-    forecaster = ForecasterAutoreg(
-        regressor           = model,
-        lags                = lags,
-        differentiation     = differentiation,
-        transformer_y       = scalar,
-        transformer_exog    = exog_scalar
+                               horizon, differentiation=None, lags=None, scalar=None, exog_scalar=None,
+                               useLags=True, useExog=True):
+    useLags = False if lags is None else True
+    useExog = False if X_train is None else True
+    assert useLags == True or useExog == True, 'must use lags and/or exogenous variables'
+    if useLags == False and differentiation == 1:
+        raise NotImplementedError
+
+    # forecast validation with lags
+    if useLags == True:
+        # initiate forecaster
+        forecaster = ForecasterAutoreg(
+            regressor           = model,
+            lags                = lags,
+            differentiation     = differentiation,
+            transformer_y       = scalar,
+            transformer_exog    = exog_scalar
         )
 
-    # fit forecaster
-    forecaster.fit(y=y_train, exog=X_train)
+        # fit forecaster
+        forecaster.fit(y=y_train, exog=X_train)
 
-    y_val_pred = pd.Series()
-    indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
+        y_val_pred = pd.Series()
+        indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
 
-    timer = Time()
-    timer.start()
-    for idx, time in enumerate(indexrange):
-        # include max_lag last obs in train because of lags
-        last_window = y_train.tail(forecaster.max_lag + 1)
+        timer = Time()
+        timer.start()
+        for idx, time in enumerate(indexrange):
+            # include max_lag last obs in train because of lags
+            last_window = y_train.tail(forecaster.max_lag + 1)
 
-        # include validation obs from first index to step before forecast
-        if idx > 0:
-            last_window = pd.concat([last_window, y_val.loc[:time-1]])
+            # include validation obs from first index to step before forecast
+            if idx > 0:
+                last_window = pd.concat([last_window, y_val.loc[:time-1]])
     
-        # forecast starting from last window
-        preds = forecaster.predict(steps=horizon, exog=X_val.loc[time:time+horizon], last_window=last_window)
-        y_val_pred = pd.concat([y_val_pred, preds])
-    print(timer.end())
+            # forecast starting from last window
+            if useExog == True:
+                preds = forecaster.predict(steps=horizon, exog=X_val.loc[time:time+horizon], last_window=last_window)
+            else:
+                preds = forecaster.predict(steps=horizon, exog=None, last_window=last_window)
+            y_val_pred = pd.concat([y_val_pred, preds])
+        print(timer.end())
 
     # fit model to get fitted training values
-    X_train_temp = X_train.copy(deep=True)
+    if useExog == True:
+        X_train_temp = X_train.copy(deep=True)
+        X_val_temp = X_val.copy(deep=True)
+    else:
+        X_train_temp = pd.DataFrame(index=y_train.index)
+        X_val_temp = pd.DataFrame(index=y_val.index)
     if lags:
         for lag in lags:
+            # find the lagged values of train and val
             X_train_temp[f'lag_{lag}'] = y_train.shift(periods=lag).fillna(0)
-    
+            X_val_temp[f'lag_{lag}'] = pd.concat([y_train, y_val]).shift(periods=lag).fillna(0)[y_val.index]
+
     X_train_temp_transformed = pd.DataFrame(exog_scalar.fit_transform(X_train_temp), columns=X_train_temp.columns)
     y_train_temp_transformed = scalar.fit_transform(y_train.to_numpy().reshape(-1, 1))
     model.fit(X_train_temp_transformed, y_train_temp_transformed)
     y_train_pred_transformed = model.predict(X_train_temp_transformed).reshape(-1, 1)
     y_train_pred = pd.Series(scalar.inverse_transform(y_train_pred_transformed).squeeze(1))
 
+    # forecast validation without lags
+    if useLags == False:
+        X_val_temp_transformed = pd.DataFrame(exog_scalar.fit_transform(X_val_temp), columns=X_val_temp.columns)
+        y_val_pred_transformed = model.predict(X_val_temp_transformed).reshape(-1, 1)
+        y_val_pred = pd.Series(scalar.inverse_transform(y_val_pred_transformed).squeeze(1))
+
     # round and cut off
     y_train_pred = y_train_pred.round()
     y_train_pred[y_train_pred < 0] = 0
     y_val_pred = y_val_pred.round()
     y_val_pred[y_val_pred < 0] = 0
+
+    y_train_pred.index = y_train.index
+    y_val_pred.index = y_val.index
     return model, y_train_pred, y_val_pred
 
 
 def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
                                    horizon, differentiation=None, lags=None, scalar=None, exog_scalar=None):
+    useLags = False if lags is None else True
+    useExog = False if X_train is None else True
+    assert useLags == True or useExog == True, 'must use lags and/or exogenous variables'
+    if useLags == False or useExog == False:
+        raise NotImplementedError
+
     # initiate forecaster
     forecaster = ForecasterAutoreg(
         regressor           = model,
@@ -168,6 +202,12 @@ def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
 
 def slidingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
                                  horizon, window_size, differentiation=None, lags=None, scalar=None, exog_scalar=None):
+    useLags = False if lags is None else True
+    useExog = False if X_train is None else True
+    assert useLags == True or useExog == True, 'must use lags and/or exogenous variables'
+    if useLags == False or useExog == False:
+        raise NotImplementedError
+
     # initiate forecaster
     forecaster = ForecasterAutoreg(
         regressor           = model,
