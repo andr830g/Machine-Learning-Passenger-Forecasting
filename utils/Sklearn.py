@@ -1,92 +1,11 @@
-from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
-import numpy as np
-import time
-from skforecast.ForecasterAutoreg import ForecasterAutoreg
 import pandas as pd
-from sktime.transformations.series.difference import Differencer
+from skforecast.ForecasterAutoreg import ForecasterAutoreg
+from utils.tools import *
+from utils.metrics import Time
 
-def MAE(y, yhat):
-    """
-    Mean Absolute Error in % is MAE/mean(y)
-    y is ground truth and yhat is prediction
-    """
-    mae = mean_absolute_error(y, yhat)
-    meany = np.mean(y)
-    maepercent = mae/meany
-    return np.round(maepercent, decimals=3)
-
-
-def MAPE(y, yhat):
-    """
-    Mean Absolute Percentage Error
-    y is ground truth and yhat is prediction
-    """
-    #mape = mean_absolute_percentage_error(y, yhat)
-    ape = np.abs(yhat - y)/y
-    ape = ape.replace([-np.inf, np.inf], 0)
-    mape = np.mean(ape)
-    return np.round(mape, decimals=3)
-
-
-
-def RMSE(y, yhat):
-    """
-    Root Mean Squared Error in % is RMSE/mean(y)
-    y is ground truth and yhat is prediction
-    """
-    rmse = np.sqrt(mean_squared_error(y, yhat))
-    meany = np.mean(y)
-    rmsepercent = rmse/meany
-    return np.round(rmsepercent, decimals=3)
-
-
-class Time:
-    """
-    Class for starting and ending execution time
-    """
-    def __init__(self):
-        self.startTime = None
-        self.endTime = None
-
-    def start(self):
-        self.startTime = time.time()
-
-    def end(self):
-        assert self.startTime != None, 'Must start timer before ending timer'
-
-        self.endTime = time.time()
-
-        return f'Execution time: {self.endTime - self.startTime:.3f} sec'
-
-
-def formatFittedValues(y_pred, y_true):
-    # round and cut off
-    y_pred = y_pred.round()
-    y_pred[y_pred < 0] = 0
-
-    # re-index
-    y_pred.index = y_true.index
-    return y_pred
-
-
-def difference(y_pred):
-    y_pred_diff = y_pred.diff(periods=1).fillna(0)
-    return y_pred_diff
-
-
-def inverseDifferencing(y_pred_diff, y_true, horizon):
-    y_pred = pd.Series()
-    indexrange = range(y_true.index[0], y_true.index[-1] + 1, horizon)
-    for idx, time in enumerate(indexrange):
-        if idx == 0:
-            constant = y_true.loc[time]
-        else:
-            constant = y_true.loc[time-1]
-        preds = y_pred_diff.loc[time : time+horizon-1].cumsum() + constant
-        y_pred = pd.concat([y_pred, preds])
-    y_pred.index = y_true.index
-    return y_pred
-
+"""
+Sklearn Forecasting
+"""
 
 def getFittedValues(model, X_train_temp, y_train_diff, scalar, exog_scalar):
     X_train_lagdiff_transformed = pd.DataFrame(exog_scalar.fit_transform(X_train_temp), columns=X_train_temp.columns)
@@ -215,7 +134,6 @@ def fixedWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
     return model, y_train_pred, y_val_pred
 
 
-
 def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
                                    horizon, differentiation=None, lags=None, scalar=None, exog_scalar=None):
     useLags = False if lags is None else True
@@ -274,7 +192,7 @@ def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
     return model, y_train_pred, y_val_pred
 
 
-def slidingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
+def rollingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
                                  horizon, window_size, differentiation=None, lags=None, scalar=None, exog_scalar=None):
     useLags = False if lags is None else True
     useExog = False if X_train is None else True
