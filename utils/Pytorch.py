@@ -14,11 +14,9 @@ Pytorch Forecasting
 """
 
 def selectFeatures(X_train, X_val, lags, exog, lagColName):
-    columns_to_keep = []
-    if len(lags) == 0 and not exog:
-        print("No data")
-        return np.nan, np.nan
+    assert len(lags) > 0 or exog == True, 'must use lags and/or exogenous variables'
     
+    columns_to_keep = []
     for col in X_train.columns:
         if col.startswith(lagColName):
             if int(col[len(lagColName):]) in lags:
@@ -163,13 +161,13 @@ def predictHorizonSteps(X_val_df, y_val_pred_scaled, model, horizon):
 
 def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, X_val_df, y_gt, model, batchSize, epochs, lr, device, lagColName, horizon):
     y_val_pred_scaled = []  # Initialize a prediction list for predictions
-    iterations = 0  # Keep track of iterations
+    iteration = 0  # Keep track of iterations
 
     # While there is still values left in the validation set to be forecasted
     while len(X_val_df) != 0:
         # Update iteration and print
-        iterations += 1
-        print(iterations)
+        iteration += 1
+        print(f"Forecast iteration: {iteration}")
         clear_output(wait=True)
 
         # Predict the next <horizon> values and update the lags of the input data with the predicted values
@@ -197,7 +195,7 @@ def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val
     return y_val_pred_scaled
 
 
-def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, model, batchSize, epochs, lr, device, lagColName, horizon):
+def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true, y_val_true, model, batchSize, epochs, lr, device, lagColName, horizon):
 
     _, scaler_y, X_train_scaled, X_val_scaled, y_train_scaled, y_val_scaled, _, X_val_df = scaleData(X_train,
                                                                                                      y_train,
@@ -250,6 +248,15 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, model, batch
     # Inverse transform the scaled predictions and output as type pd.Series
     y_train_pred = pd.Series(scaler_y.inverse_transform(np.array(y_train_pred_scaled).reshape(-1, 1)).squeeze())
     y_val_pred = pd.Series(scaler_y.inverse_transform(np.array(y_val_pred_scaled).reshape(-1, 1)).squeeze())
+
+    # If the data is differenced, then inverse difference it before outputting it
+    if lagColName == "diffLag":
+        y_train_pred = inverseDifferencing(y_train_pred, y_train_true, horizon=40)
+        y_val_pred = inverseDifferencing(y_val_pred, y_val_true, horizon=40)
+
+    y_train_pred = formatFittedValues(y_train_pred, y_train_true)
+    y_val_pred = formatFittedValues(y_val_pred, y_val_true)
+
     return estimated_model, y_train_pred, y_val_pred, epoch_range, train_loss_list, val_loss_list
 
 
