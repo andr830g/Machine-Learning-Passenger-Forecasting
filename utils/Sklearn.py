@@ -234,7 +234,7 @@ def expandingWindowWithoutLags(X_train, y_train, X_val, y_val, model, horizon, d
 
 
 def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
-                                   horizon, differentiation=None, lags=None, scalar=None, exog_scalar=None):
+                                   horizon, differentiation, lags, scalar, exog_scalar):
     useLags = False if lags is None else True
     useExog = False if X_train is None else True
 
@@ -274,6 +274,143 @@ def expandingWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
 Rolling window
 """
 
+def rollingWindowWithLags(X_train, y_train, X_val, y_val, model, 
+                            horizon, window_size, differentiation, lags, 
+                            scalar, exog_scalar, useExog):
+    # initiate forecaster
+    forecaster = ForecasterAutoreg(
+        regressor           = model,
+        lags                = lags,
+        differentiation     = differentiation,
+        transformer_y       = scalar,
+        transformer_exog    = exog_scalar
+        )
+
+    y_val_pred = pd.Series()
+    indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
+
+    # concat all train and val data so it can be subsetted on window
+    if useExog == True:
+        X_sliding = pd.concat([X_train, X_val])
+    else:
+        X_sliding = None
+
+    y_sliding = pd.concat([y_train, y_val])
+
+    timer = Time()
+    timer.start()
+    for idx, time in enumerate(indexrange):
+        # subset on window size
+        if useExog == True:
+            X_temp = X_sliding.loc[time - window_size : time-1]
+        else:
+            X_temp = None
+
+        y_temp = y_sliding.loc[time - window_size : time-1]
+
+        print(y_temp.index)
+
+        forecaster.fit(y=y_temp, exog=X_temp)
+
+        # forecast future validation data
+        if useExog == True:
+            X_horizon = X_val.loc[time:time+horizon]
+        else:
+            X_horizon = None
+        preds = forecaster.predict(steps=horizon, exog=X_horizon)
+
+        y_val_pred = pd.concat([y_val_pred, preds])
+    print(timer.end())
+
+    return model, y_val_pred
+
+
+def rollingWindowWithoutLags(X_train, y_train, X_val, y_val, model, 
+                             horizon, window_size, differentiation, 
+                             scalar, exog_scalar):
+    y_val_pred_diff = pd.Series()
+    indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
+
+    # concat all train and val data so it can be subsetted on window
+    X_sliding = pd.concat([X_train, X_val])
+    y_sliding = pd.concat([y_train, y_val])
+
+    timer = Time()
+    timer.start()
+    for idx, time in enumerate(indexrange):
+        # subset on window size
+        X_temp = X_sliding.loc[time - window_size : time-1]
+        y_temp = y_sliding.loc[time - window_size : time-1]
+
+        print(y_temp.index)
+
+        # fit rolling model
+        model_fitted, _, scalar, exog_scalar = trainModel(model=model, 
+                                                          X_train=X_temp, y_train=y_temp, 
+                                                          scalar=scalar, exog_scalar=exog_scalar, 
+                                                          horizon=horizon, lags=None, differentiation=differentiation,
+                                                          useExog=True, useLags=False)
+
+        # forecast future validation data
+        X_horizon = X_val.loc[time:time+horizon-1]
+        y_horizon = y_val.loc[time:time+horizon-1]
+
+        # make horizon prediction where output is differenced
+        X_horizon_transformed = pd.DataFrame(exog_scalar.transform(X_horizon), columns=X_horizon.columns)
+        y_horizon_pred_transformed = model.predict(X_horizon_transformed).reshape(-1, 1)
+        y_horizon_pred_diff = pd.Series(scalar.inverse_transform(y_horizon_pred_transformed).squeeze(1))
+        y_horizon_pred_diff.index = y_horizon.index
+
+        y_val_pred_diff = pd.concat([y_val_pred_diff, y_horizon_pred_diff])
+    print(timer.end())
+
+    # inverse difference predictions
+    if differentiation == 1:
+        y_val_pred = inverseDifferencing(y_val_pred_diff, y_val, horizon)
+    else:
+        y_val_pred = y_val_pred_diff.copy()
+    
+    return model, y_val_pred
+
+
+def rollingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
+                                 horizon, window_size, differentiation, lags, scalar, exog_scalar):
+    useLags = False if lags is None else True
+    useExog = False if X_train is None else True
+
+    assert useLags == True or useExog == True, 'must use lags and/or exogenous variables'
+    assert useLags == True or useExog == True, 'must use lags and/or exogenous variables'
+    assert (X_train is None and X_val is None) or (X_train is not None and X_val is not None), 'X_train and X_val must both be real or None'
+    assert differentiation is None or differentiation == 1, 'differentiation must be None or 1'
+
+    # fit model to get training values
+    model_fitted, y_train_pred, scalar, exog_scalar = trainModel(model=model, 
+                                                                 X_train=X_train, y_train=y_train, 
+                                                                 scalar=scalar, exog_scalar=exog_scalar, 
+                                                                 horizon=horizon, lags=lags, differentiation=differentiation,
+                                                                 useExog=useExog, useLags=useLags)
+    
+    if useLags == True:
+        # with lags with or without exog
+        model_fitted, y_val_pred = rollingWindowWithLags(X_train=X_train, y_train=y_train, 
+                                                         X_val=X_val, y_val=y_val, model=model, 
+                                                         horizon=horizon, window_size=window_size, differentiation=differentiation, 
+                                                         lags=lags, scalar=scalar, exog_scalar=exog_scalar, 
+                                                         useExog=useExog)
+    else:
+        # without lags with exog
+        model_fitted, y_val_pred = rollingWindowWithoutLags(X_train=X_train, y_train=y_train, 
+                                                            X_val=X_val, y_val=y_val,
+                                                            model=model_fitted, horizon=horizon, 
+                                                            window_size=window_size, differentiation=differentiation, 
+                                                            scalar=scalar, exog_scalar=exog_scalar)
+
+    y_train_pred = formatFittedValues(y_train_pred, y_train)
+    y_val_pred = formatFittedValues(y_val_pred, y_val)
+    return model, y_train_pred, y_val_pred
+
+
+"""
 def rollingWindowForecastSklearn(X_train, y_train, X_val, y_val, model, 
                                  horizon, window_size, differentiation=None, lags=None, scalar=None, exog_scalar=None):
     useLags = False if lags is None else True
@@ -329,3 +466,4 @@ def rollingWindowForecastSklearn(X_train, y_train, X_val, y_val, model,
     y_train_pred = formatFittedValues(y_train_pred, y_train)
     y_val_pred = formatFittedValues(y_val_pred, y_val)
     return model, y_train_pred, y_val_pred
+"""

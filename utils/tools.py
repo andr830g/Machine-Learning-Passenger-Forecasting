@@ -33,5 +33,5 @@ def inverseDifferencing(y_pred_diff, y_true, horizon):
             constant = y_true.loc[time-1]
         preds = y_pred_diff.loc[time : time+horizon-1].cumsum() + constant
         y_pred = pd.concat([y_pred, preds])
-    y_pred.index = y_true.index
+    #y_pred.index = y_true.index
     return y_pred
