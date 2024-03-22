@@ -1,4 +1,5 @@
 import pandas as pd
+from utils.ColumnEnum import Columns
 
 def readData(agglevel):
     path = 'data/'
@@ -34,6 +35,9 @@ def performTrainValSplit(df, train_val_split='2023-07-01'):
 
     df_train = df[df['date'] < train_val_split]
     df_val = df[df['date'] >= train_val_split]
+
+    df_train.index = pd.RangeIndex(start=0, stop=df_train.shape[0])
+    df_val.index = pd.RangeIndex(start = df_train.shape[0], stop = df_train.shape[0] + df_val.shape[0])
 
     return df_train, df_val
 
@@ -104,4 +108,38 @@ def addFeatures(df, agglevel, diff=False):
             for i in range(1, 7+1):
                 df[f'lag{80*i}'] = df['passengersBoarding'].shift(periods=80*i, fill_value=0)
     
+    return df
+
+
+def subsetColumns(df, dropCategorical=True, dropLags=True, dropWeather=True, dropCalendar=True, 
+                  dropSpecific=[], keepSpecific=[]):
+    
+    keepOnlySpecificCols = len(keepSpecific) > 0
+
+    # drop categorical variables
+    if dropCategorical and not keepOnlySpecificCols:
+        categorical = [col.value for col in Columns if col.name.split('_')[0] == 'categorical']
+        df = df.drop(columns=categorical, axis=1, errors='ignore')
+    
+    # drop lag variables
+    if dropLags and not keepOnlySpecificCols:
+        df = df.loc[:,~df.columns.str.contains('lag', case=False)]
+
+    # drop weather variables
+    if dropWeather and not keepOnlySpecificCols:
+        weather = [col.value for col in Columns if col.name.split('_')[0] == 'weather']
+        df = df.drop(columns=weather, axis=1, errors='ignore')
+    
+    # drop calendar variables
+    if dropCalendar and not keepOnlySpecificCols:
+        calendar = [col.value for col in Columns if col.name.split('_')[0] == 'calendar']
+        df = df.drop(columns=calendar, axis=1, errors='ignore')
+    
+    # drop specific columns
+    df = df.drop(columns=dropSpecific, axis=1, errors='ignore')
+    
+    # keep only specified columns
+    if keepOnlySpecificCols:
+        df = df.loc[:, keepSpecific]
+
     return df
