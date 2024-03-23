@@ -6,9 +6,9 @@ import time
 Metrics
 """
 
-def MAE(y, yhat):
+def nMAE(y, yhat):
     """
-    Mean Absolute Error in % is MAE/mean(y)
+    Normalized Mean Absolute Error in % is MAE/mean(y)
     y is ground truth and yhat is prediction
     """
     mae = mean_absolute_error(y, yhat)
@@ -29,9 +29,9 @@ def MAPE(y, yhat):
     return np.round(mape, decimals=3)
 
 
-def RMSE(y, yhat):
+def nRMSE(y, yhat):
     """
-    Root Mean Squared Error in % is RMSE/mean(y)
+    Normalized Root Mean Squared Error in % is RMSE/mean(y)
     y is ground truth and yhat is prediction
     """
     rmse = np.sqrt(mean_squared_error(y, yhat))

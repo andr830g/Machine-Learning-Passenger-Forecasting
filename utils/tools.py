@@ -106,28 +106,28 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, tr
         ax[1, 1].set_xticklabels(valDateCol[::dateInterval], rotation=90)
 
     ax[0, 0].text(y_train_true.index.start + (y_train_true.index.stop - y_train_true.index.start)//54, np.max(y_train_true) + np.max(y_train_true)//text_constant,
-               f'Train MAE%: {MAE(y=y_train_true, yhat=y_train_pred)}\n'
+               f'Train MAE%: {nMAE(y=y_train_true, yhat=y_train_pred)}\n'
                + f'Train MAPE: {MAPE(y=y_train_true, yhat=y_train_pred)}\n'
-               + f'Train RMSE%: {RMSE(y=y_train_true, yhat=y_train_pred)}',
+               + f'Train RMSE%: {nRMSE(y=y_train_true, yhat=y_train_pred)}',
                bbox=dict(facecolor='white', alpha=0.5),
                fontsize=9)
     ax[0, 1].text(y_val_true.index.start + (y_val_true.index.stop - y_val_true.index.start)//54, np.max(y_val_true) + np.max(y_val_true)//text_constant,
-               f'Val MAE%: {MAE(y=y_val_true, yhat=y_val_pred)}\n'
+               f'Val MAE%: {nMAE(y=y_val_true, yhat=y_val_pred)}\n'
                + f'Val MAPE: {MAPE(y=y_val_true, yhat=y_val_pred)}\n'
-               + f'Val RMSE%: {RMSE(y=y_val_true, yhat=y_val_pred)}',
+               + f'Val RMSE%: {nRMSE(y=y_val_true, yhat=y_val_pred)}',
                bbox=dict(facecolor='white', alpha=0.5),
                fontsize=9)
     
     plt.show()
 
     if print_accuracy:
-        print('Train MAE%:', MAE(y=y_train_true, yhat=y_train_pred))
+        print('Train MAE%:', nMAE(y=y_train_true, yhat=y_train_pred))
         print('Train MAPE:', MAPE(y=y_train_true, yhat=y_train_pred))
-        print('Train RMSE%:', RMSE(y=y_train_true, yhat=y_train_pred))
+        print('Train RMSE%:', nRMSE(y=y_train_true, yhat=y_train_pred))
         print('---')
-        print('Val MAE%:', MAE(y=y_val_true, yhat=y_val_pred))
+        print('Val MAE%:', nMAE(y=y_val_true, yhat=y_val_pred))
         print('Val MAPE:', MAPE(y=y_val_true, yhat=y_val_pred))
-        print('Val RMSE%:', RMSE(y=y_val_true, yhat=y_val_pred))
+        print('Val RMSE%:', nRMSE(y=y_val_true, yhat=y_val_pred))
 
 
 def plotLossCurves(train_loss_list, val_loss_list, epoch_range):
