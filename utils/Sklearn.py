@@ -50,7 +50,9 @@ def trainModel(model, X_train, y_train, scalar, exog_scalar, horizon, lags, diff
 Fixed window methods
 """
 
-def fixedWindowWithLags(X_train, y_train, X_val, y_val, model, horizon, differentiation, lags, scalar, exog_scalar, useExog, window_size=None):
+def fixedWindowWithLags(X_train, y_train, X_val, y_val, model, 
+                        horizon, differentiation, lags, interval, 
+                        scalar, exog_scalar, useExog, window_size=None):
     # forecasted values, lags and differencing handled automatically
     forecaster = ForecasterAutoreg(
         regressor           = model,
@@ -63,7 +65,7 @@ def fixedWindowWithLags(X_train, y_train, X_val, y_val, model, horizon, differen
     # fit forecaster
     forecaster.fit(y=y_train, exog=X_train)
 
-    y_val_pred = pd.Series()
+    y_val_pred = pd.DataFrame(columns=['pred', 'lower_bound', 'upper_bound'])
     indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
 
     # perform forecast
@@ -79,9 +81,13 @@ def fixedWindowWithLags(X_train, y_train, X_val, y_val, model, horizon, differen
     
         # forecast starting from last window
         if useExog == True:
-            preds = forecaster.predict(steps=horizon, exog=X_val.loc[time:time+horizon], last_window=last_window)
+            X_horizon = X_val.loc[time:time+horizon]
         else:
-            preds = forecaster.predict(steps=horizon, exog=None, last_window=last_window)
+            X_horizon = None
+
+        #preds = forecaster.predict(steps=horizon, exog=X_horizon, last_window=last_window)
+        preds = forecaster.predict_interval(steps=horizon, exog=X_horizon, last_window=last_window, 
+                                            interval=interval, n_boot=500, random_state=42)
         y_val_pred = pd.concat([y_val_pred, preds])
 
         print('Forecast iteration:', idx)
@@ -91,7 +97,9 @@ def fixedWindowWithLags(X_train, y_train, X_val, y_val, model, horizon, differen
     return model, y_val_pred
 
 
-def fixedWindowWithoutLags(X_train, y_train, X_val, y_val, model, horizon, differentiation, scalar, exog_scalar, window_size=None):
+def fixedWindowWithoutLags(X_train, y_train, X_val, y_val, model, 
+                           horizon, differentiation, 
+                           scalar, exog_scalar, window_size=None):
     # predict
     X_val_transformed = pd.DataFrame(exog_scalar.transform(X_val), columns=X_val.columns)
     y_val_pred_transformed = model.predict(X_val_transformed).reshape(-1, 1)
@@ -102,6 +110,10 @@ def fixedWindowWithoutLags(X_train, y_train, X_val, y_val, model, horizon, diffe
         y_val_pred = inverseDifferencing(y_val_pred_diff, y_val, horizon)
     else:
         y_val_pred = y_val_pred_diff.copy()
+    
+    y_val_pred = pd.DataFrame(y_val_pred, columns=['pred'])
+    y_val_pred['lower_bound'] = np.NaN
+    y_val_pred['upper_bound'] = np.NAN
 
     return model, y_val_pred
 
@@ -111,7 +123,7 @@ Expanding window methods
 """
 
 def expandingWindowWithLags(X_train, y_train, X_val, y_val, model, 
-                            horizon, differentiation, lags, 
+                            horizon, differentiation, lags, interval, 
                             scalar, exog_scalar, useExog, window_size=None):
     # initiate forecaster
     forecaster = ForecasterAutoreg(
@@ -122,7 +134,7 @@ def expandingWindowWithLags(X_train, y_train, X_val, y_val, model,
         transformer_exog    = exog_scalar
         )
 
-    y_val_pred = pd.Series()
+    y_val_pred = pd.DataFrame(columns=['pred', 'lower_bound', 'upper_bound'])
     indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
 
     # define training data which will iteratively be expanded
@@ -152,7 +164,8 @@ def expandingWindowWithLags(X_train, y_train, X_val, y_val, model,
         else:
             X_horizon = None
         
-        preds = forecaster.predict(steps=horizon, exog=X_horizon)
+        preds = forecaster.predict_interval(steps=horizon, exog=X_horizon,
+                                            interval=interval, n_boot=500, random_state=42)
         y_val_pred = pd.concat([y_val_pred, preds])
 
         print('Forecast iteration:', idx)
@@ -163,7 +176,9 @@ def expandingWindowWithLags(X_train, y_train, X_val, y_val, model,
     return model, y_val_pred
 
 
-def expandingWindowWithoutLags(X_train, y_train, X_val, y_val, model, horizon, differentiation, scalar, exog_scalar, window_size=None):
+def expandingWindowWithoutLags(X_train, y_train, X_val, y_val, model, 
+                               horizon, differentiation, 
+                               scalar, exog_scalar, window_size=None):
     # setup
     y_val_pred_diff = pd.Series()
     indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
@@ -211,6 +226,10 @@ def expandingWindowWithoutLags(X_train, y_train, X_val, y_val, model, horizon, d
         y_val_pred = inverseDifferencing(y_val_pred_diff, y_val, horizon)
     else:
         y_val_pred = y_val_pred_diff.copy()
+    
+    y_val_pred = pd.DataFrame(y_val_pred, columns=['pred'])
+    y_val_pred['lower_bound'] = np.NaN
+    y_val_pred['upper_bound'] = np.NaN
 
     return model, y_val_pred
 
@@ -220,7 +239,7 @@ Rolling window methods
 """
 
 def rollingWindowWithLags(X_train, y_train, X_val, y_val, model, 
-                            horizon, window_size, differentiation, lags, 
+                            horizon, window_size, differentiation, lags, interval, 
                             scalar, exog_scalar, useExog):
     # initiate forecaster
     forecaster = ForecasterAutoreg(
@@ -231,7 +250,7 @@ def rollingWindowWithLags(X_train, y_train, X_val, y_val, model,
         transformer_exog    = exog_scalar
         )
 
-    y_val_pred = pd.Series()
+    y_val_pred = pd.DataFrame(columns=['pred', 'lower_bound', 'upper_bound'])
     indexrange = range(y_val.index[0], y_val.index[-1] + 1, horizon)
 
     # concat all train and val data so it can be subsetted on window
@@ -262,8 +281,9 @@ def rollingWindowWithLags(X_train, y_train, X_val, y_val, model,
             X_horizon = X_val.loc[time:time+horizon]
         else:
             X_horizon = None
-        preds = forecaster.predict(steps=horizon, exog=X_horizon)
 
+        preds = forecaster.predict_interval(steps=horizon, exog=X_horizon,
+                                            interval=interval, n_boot=500, random_state=42)
         y_val_pred = pd.concat([y_val_pred, preds])
 
         print('Forecast iteration:', idx)
@@ -323,6 +343,10 @@ def rollingWindowWithoutLags(X_train, y_train, X_val, y_val, model,
     else:
         y_val_pred = y_val_pred_diff.copy()
     
+    y_val_pred = pd.DataFrame(y_val_pred, columns=['pred'])
+    y_val_pred['lower_bound'] = np.NaN
+    y_val_pred['upper_bound'] = np.NaN
+    
     return model, y_val_pred
 
 
@@ -331,8 +355,13 @@ Forecast method
 """
 
 def sklearnForecast(X_train, y_train, X_val, y_val, model, 
-                    horizon, differentiation, lags, use_exog, scalar, exog_scalar, 
+                    horizon, differentiation, lags, interval,
+                    use_exog, scalar, exog_scalar, 
                     window_type, window_size=None):
+    """
+    Implementation of skforecast ForecasterAutoreg.
+    Our implementation also supports forecasting without lags which skforecast does not.
+    """
     
     if use_exog == False:
         X_train = None
@@ -346,6 +375,8 @@ def sklearnForecast(X_train, y_train, X_val, y_val, model,
     assert (X_train is None and X_val is None) or (X_train is not None and X_val is not None), 'X_train and X_val must both be real or None'
     assert differentiation is None or differentiation == 1, 'Differentiation must be None or 1'
     assert useLags == False or len(lags) > 0, 'List of lags cant be empty'
+    assert isinstance(interval, list) and len(interval) == 2, 'Interval must be list with two values'
+    assert interval[0] < interval[1], 'For interval [lower, upper], lower must be < upper'
 
     if window_type == 'rolling':
         forecastWithLags = rollingWindowWithLags
@@ -374,7 +405,7 @@ def sklearnForecast(X_train, y_train, X_val, y_val, model,
         # with lags with or without exog
         model_fitted, y_val_pred = forecastWithLags(X_train=X_train, y_train=y_train, 
                                                          X_val=X_val, y_val=y_val, model=model, 
-                                                         horizon=horizon, window_size=window_size, differentiation=differentiation, 
+                                                         horizon=horizon, window_size=window_size, differentiation=differentiation, interval=interval, 
                                                          lags=lags, scalar=scalar, exog_scalar=exog_scalar, 
                                                          useExog=useExog)
     else:

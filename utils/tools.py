@@ -43,7 +43,8 @@ def inverseDifferencing(y_pred_diff, y_true, horizon):
 Plotting
 """
 
-def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, trainDateCol=[], valDateCol=[], dates=True, print_accuracy=False):
+def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_val_lower=None, y_val_upper=None, 
+                          trainDateCol=[], valDateCol=[], dates=True, print_accuracy=False):
     assert (len(trainDateCol) > 0 and len(valDateCol) > 0) or not dates, 'must input trainDateCol and valDateCol or else set dates=False'
 
     text_constant = 19
@@ -61,6 +62,9 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, tr
 
     ax[0, 1].plot(y_val_true.index, y_val_true, color='red', label='gt')
     ax[0, 1].plot(y_val_true.index, y_val_pred, color='blue', alpha=0.5, label='pred')
+    containsNull = y_val_lower.isnull().values.any() and y_val_upper.isnull().values.any()
+    if not containsNull:
+        ax[0, 1].fill_between(y_val_true.index, y1=y_val_lower, y2=y_val_upper, color='orange', alpha=0.5, label='interval')
     ax[0, 1].set_title('Predicted Validation Data')
     ax[0, 1].legend(loc='upper right')
     ax[0, 1].set_xlim(y_val_true.index.start, y_val_true.index.stop)
