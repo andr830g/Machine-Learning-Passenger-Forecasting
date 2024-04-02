@@ -225,7 +225,10 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
                                                                             save_best=False)
     
     # Get fitted values from train
-    y_train_pred_scaled = estimated_model(X_train_tensor.unsqueeze(-1)).detach().squeeze().numpy().tolist()
+    y_train_pred_scaled = []
+    for batch_idx, (Xbatch, _) in enumerate(initial_trainLoader):
+        y_train_pred_scaled += estimated_model(Xbatch.unsqueeze(-1)).detach().squeeze().numpy().tolist()
+    #y_train_pred_scaled = estimated_model(X_train_tensor.unsqueeze(-1)).detach().squeeze().numpy().tolist()
 
     X_val_df.apply(removeGTLags, lagColName=lagColName)  # Calls the removeGTLags function on all columns, which removes the lags that would not yet be known from the starting point of the forecasting
     y_gt = y_val_scaled.squeeze().tolist()  # Initiate y_gt as the ground truth observations
