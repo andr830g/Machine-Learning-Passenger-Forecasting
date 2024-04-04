@@ -9,6 +9,7 @@ from IPython.display import clear_output
 from utils.tools import *
 from utils.metrics import Time
 from utils.DataSplitter import getTrainData, performTrainValSplit, subsetColumns
+from utils.ColumnEnum import Columns
 
 """
 Pytorch Forecasting
@@ -33,17 +34,17 @@ def setupData(aggLevel, multiplier, line, diff, lags, dropWeather, dropCalendar)
 
     if diff:
         # Input diff, output diff
-        target_column = "diff"
-        drop_cols = ["Q1", "mon", "workdayPlan", "passengersBoarding"]
+        target_column = Columns.target_diff.value
+        drop_cols = [Columns.calendar_Q1.value, Columns.calendar_mon.value, Columns.calendar_workdayPlan.value, Columns.calendar_passengersBoarding.value]
         lagColName = "diffLag"
         
     if not diff:
         # Input passengers, output passengers
-        target_column = "passengersBoarding"
-        drop_cols = ["Q1", "mon", "workdayPlan"]
+        target_column = Columns.target_passengersBoarding.value
+        drop_cols = [Columns.calendar_Q1.value, Columns.calendar_mon.value, Columns.calendar_workdayPlan.value]
         lagColName = "lag"
 
-    true_target_column = "passengersBoarding"
+    true_target_column = Columns.target_passengersBoarding.value
     df = getTrainData(agglevel=aggLevel, diff=diff)
 
     train, val = performTrainValSplit(df)
@@ -201,13 +202,13 @@ def predictHorizonSteps(X_val_df, y_val_pred_scaled, model, horizon):
 
 def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, X_val_df, y_gt, model, batchSize, epochs, lr, device, lagColName, horizon):
     y_val_pred_scaled = []  # Initialize a prediction list for predictions
-    #iteration = 0  # Keep track of iterations
+    iteration = 0  # Keep track of iterations
 
     # While there is still values left in the validation set to be forecasted
     while len(X_val_df) != 0:
         # Update iteration and print
-        #iteration += 1
-        #print(f"Forecast iteration: {iteration}")
+        iteration += 1
+        print(f"Forecast iteration: {iteration}")
         clear_output(wait=True)
 
         # Predict the next <horizon> values and update the lags of the input data with the predicted values
