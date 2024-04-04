@@ -1,6 +1,7 @@
-from enum import StrEnum
+#from enum import StrEnum
+from enum import Enum
 
-class Columns(StrEnum):
+class Columns(Enum):
     # categorical
     categorical_date = 'date'
     categorical_minute = 'minute'
