@@ -50,6 +50,15 @@ class Columns(Enum):
     calendar_easterVacation = 'easterVacation'
     calendar_event = 'event'
 
+    # target
     target_passengersBoarding = 'passengersBoarding'
     target_diff = 'diff'
+
+    # line
+    line_1A = '1A'
+    line_2A = '2A'
+    line_3A = '3A'
+    line_4A = '4A'
+    line_5A = '5A'
+    line_6A = '6A'
 
