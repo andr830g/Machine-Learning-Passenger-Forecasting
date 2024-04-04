@@ -8,6 +8,7 @@ import copy
 from IPython.display import clear_output
 from utils.tools import *
 from utils.metrics import Time
+from utils.DataSplitter import getTrainData, performTrainValSplit, subsetColumns
 
 """
 Pytorch Forecasting
@@ -25,6 +26,45 @@ def selectFeatures(X_train, X_val, lags, exog, lagColName):
             columns_to_keep.append(col)
 
     return X_train[columns_to_keep], X_val[columns_to_keep]
+
+
+def setupData(aggLevel, multiplier, line, diff, lags, dropWeather, dropCalendar):
+    lags = [lag*multiplier for lag in lags]
+
+    if diff:
+        # Input diff, output diff
+        target_column = "diff"
+        drop_cols = ["Q1", "mon", "workdayPlan", "passengersBoarding"]
+        lagColName = "diffLag"
+        
+    if not diff:
+        # Input passengers, output passengers
+        target_column = "passengersBoarding"
+        drop_cols = ["Q1", "mon", "workdayPlan"]
+        lagColName = "lag"
+
+    true_target_column = "passengersBoarding"
+    df = getTrainData(agglevel=aggLevel, diff=diff)
+
+    train, val = performTrainValSplit(df)
+    train_linesubset = train[train["line"] == line].reset_index(drop=True)
+    val_linesubset = val[val["line"] == line].reset_index(drop=True)
+    val_linesubset.index += train_linesubset.index.stop
+
+    X_train = subsetColumns(train_linesubset, dropCategorical=True, dropLags=False, dropWeather=dropWeather, dropCalendar=dropCalendar,
+                                            dropSpecific=[target_column] + drop_cols).reset_index(drop=True)
+    X_val = subsetColumns(val_linesubset, dropCategorical=True, dropLags=False, dropWeather=dropWeather, dropCalendar=dropCalendar,
+                                            dropSpecific=[target_column] + drop_cols).reset_index(drop=True)
+
+    y_train = train_linesubset[target_column].reset_index(drop=True)
+    y_val = val_linesubset[target_column].reset_index(drop=True)
+    y_train_true = train_linesubset[true_target_column].reset_index(drop=True)
+    y_val_true = val_linesubset[true_target_column].reset_index(drop=True)
+    y_val_true.index += y_train.index.stop
+
+    X_train, X_val = selectFeatures(X_train, X_val, lags=lags, exog=True, lagColName=lagColName)
+
+    return X_train, y_train, X_val, y_val, y_train_true, y_val_true, lagColName, multiplier, train_linesubset, val_linesubset
 
 
 def evaluate_NN(model, loader, criterion, device):
@@ -150,10 +190,10 @@ def updateLagsWithRealValues(col, lagColName, realValues, horizon):
 def predictHorizonSteps(X_val_df, y_val_pred_scaled, model, horizon):
     steps = np.min([horizon, len(X_val_df)])  # Find how many steps to forecast (always length of horizon except for last iteration)
     for _ in range(0, steps):
-        X_fit_tensor = torch.FloatTensor(X_val_df.iloc[0:1].values)  # Select the first row in the validation set and turn it into tensor
+        X_fit_tensor = torch.FloatTensor(X_val_df.loc[:0].values)  # Select the first row in the validation set and turn it into tensor
         y_val_pred_scaled.append(model(X_fit_tensor.unsqueeze(-1)).detach().squeeze().numpy().tolist())  # Use the estimated model to predict the next value from the first row tensor, and add it to predictions
 
-        X_val_df = X_val_df.apply(lambda col: col.fillna(y_val_pred_scaled[-1], limit=1))             # Add the next row in each lag column
+        X_val_df = X_val_df.apply(lambda col: col.fillna(y_val_pred_scaled[-1], limit=1))  # Add the next row in each lag column
         X_val_df = X_val_df.drop(X_val_df.index[0]).reset_index(drop=True)  # Drop the row that was just used and reset the index of the dataframe
 
     return X_val_df, y_val_pred_scaled
@@ -161,13 +201,13 @@ def predictHorizonSteps(X_val_df, y_val_pred_scaled, model, horizon):
 
 def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, X_val_df, y_gt, model, batchSize, epochs, lr, device, lagColName, horizon):
     y_val_pred_scaled = []  # Initialize a prediction list for predictions
-    iteration = 0  # Keep track of iterations
+    #iteration = 0  # Keep track of iterations
 
     # While there is still values left in the validation set to be forecasted
     while len(X_val_df) != 0:
         # Update iteration and print
-        iteration += 1
-        print(f"Forecast iteration: {iteration}")
+        #iteration += 1
+        #print(f"Forecast iteration: {iteration}")
         clear_output(wait=True)
 
         # Predict the next <horizon> values and update the lags of the input data with the predicted values
@@ -175,7 +215,7 @@ def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val
                                                           y_val_pred_scaled,
                                                           model=model,
                                                           horizon=horizon)
-
+        
         # After forecasting the steps
         X_val_df.apply(updateLagsWithRealValues, lagColName=lagColName, realValues=y_gt, horizon=horizon)  # Call the updateLagsWithRealValues function on all columns, which inserts the ground truth values in the lags instead of the predicted values
         y_gt = y_gt[horizon:]  # Remove the <horizon> ground truth values that have been inserted into the lags
@@ -247,7 +287,7 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
                                  device=device,
                                  lagColName=lagColName,
                                  horizon=horizon)
-    
+
     # Inverse transform the scaled predictions and output as type pd.Series
     y_train_pred = pd.Series(scaler_y.inverse_transform(np.array(y_train_pred_scaled).reshape(-1, 1)).squeeze())
     y_val_pred = pd.Series(scaler_y.inverse_transform(np.array(y_val_pred_scaled).reshape(-1, 1)).squeeze())
@@ -255,6 +295,7 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
     # If the data is differenced, then inverse difference it before outputting it
     if lagColName == "diffLag":
         y_train_pred = inverseDifferencing(y_train_pred, y_train_true, horizon=40)
+        y_val_pred.index += y_train_pred.index.stop
         y_val_pred = inverseDifferencing(y_val_pred, y_val_true, horizon=40)
 
     y_train_pred = formatFittedValues(y_train_pred, y_train_true)
@@ -264,10 +305,12 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
 
 
 def fixedWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, lr, device, horizon):
+    """fixed"""
     return X_train_tensor, X_val_tensor, y_train_tensor, y_val_tensor, model
 
 
 def expandingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, lr, device, horizon):
+    """expanding"""
     # Add the next <horizon> predicted steps of validation data to the training data and remove it from the validation data
     X_train_tensor = torch.cat((X_train_tensor, X_val_tensor[:horizon]), dim=0)
     X_val_tensor = X_val_tensor[horizon:]
@@ -294,6 +337,7 @@ def expandingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_t
 
 
 def rollingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, lr, device, horizon):
+    """rolling"""
     # Add the next <horizon> predicted steps of validation data to the training data, remove it from the validation data and remove the first <horizon> steps of training data
     X_train_tensor = torch.cat((X_train_tensor, X_val_tensor[:horizon]), dim=0)
     X_val_tensor = X_val_tensor[horizon:]
