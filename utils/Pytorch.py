@@ -83,10 +83,11 @@ def evaluate_NN(model, loader, criterion, device):
     return np.mean(total_loss)
 
 
-def train_NN(model, trainLoader, valLoader, totalEpochs=100, lr=1e-3, device="cpu", save_loss=False, save_best=False, reestimate=False):
+def train_NN(model, trainLoader, valLoader, totalEpochs=100, max_lr=1e-3, device="cpu", save_loss=False, save_best=False, reestimate=False):
     device = torch.device(device)
     model = model.to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=max_lr)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=max_lr, epochs=totalEpochs, steps_per_epoch=1)
     criterion = nn.MSELoss(reduction="mean")
 
     train_loss_list = []
@@ -117,6 +118,8 @@ def train_NN(model, trainLoader, valLoader, totalEpochs=100, lr=1e-3, device="cp
 
         val_loss_mean = evaluate_NN(model, valLoader, criterion, device)
         val_loss_list.append(val_loss_mean)
+
+        lr_scheduler.step()
 
         if val_loss_mean < best_val_loss and save_best:
             best_model = copy.deepcopy(model)
@@ -200,7 +203,7 @@ def predictHorizonSteps(X_val_df, y_val_pred_scaled, model, horizon):
     return X_val_df, y_val_pred_scaled
 
 
-def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, X_val_df, y_gt, model, batchSize, epochs, lr, device, lagColName, horizon):
+def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, X_val_df, y_gt, model, batchSize, epochs, max_lr, device, lagColName, horizon):
     y_val_pred_scaled = []  # Initialize a prediction list for predictions
     iteration = 0  # Keep track of iterations
 
@@ -229,14 +232,14 @@ def forecast(windowStrategy, X_train_tensor, y_train_tensor, X_val_tensor, y_val
                                                                                            model=model,
                                                                                            batchSize=batchSize,
                                                                                            epochs=epochs,
-                                                                                           lr=lr,
+                                                                                           max_lr=max_lr,
                                                                                            device=device,
                                                                                            horizon=horizon)
 
     return y_val_pred_scaled
 
 
-def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true, y_val_true, model, batchSize, epochs, lr, device, lagColName, horizon):
+def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true, y_val_true, model, batchSize, epochs, max_lr, device, lagColName, horizon):
 
     _, scaler_y, X_train_scaled, X_val_scaled, y_train_scaled, y_val_scaled, _, X_val_df = scaleData(X_train,
                                                                                                      y_train,
@@ -261,7 +264,7 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
                                                                             initial_trainLoader,
                                                                             initial_valLoader,
                                                                             totalEpochs=epochs,
-                                                                            lr=lr,
+                                                                            max_lr=max_lr,
                                                                             device=device,
                                                                             save_best=False)
     
@@ -284,7 +287,7 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
                                  model=copy.deepcopy(estimated_model),
                                  batchSize=batchSize,
                                  epochs=epochs,
-                                 lr=lr,
+                                 max_lr=max_lr,
                                  device=device,
                                  lagColName=lagColName,
                                  horizon=horizon)
@@ -305,12 +308,12 @@ def forecastPytorch(windowStrategy, X_train, y_train, X_val, y_val, y_train_true
     return estimated_model, y_train_pred, y_val_pred, epoch_range, train_loss_list, val_loss_list
 
 
-def fixedWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, lr, device, horizon):
+def fixedWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, max_lr, device, horizon):
     """fixed"""
     return X_train_tensor, X_val_tensor, y_train_tensor, y_val_tensor, model
 
 
-def expandingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, lr, device, horizon):
+def expandingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, max_lr, device, horizon):
     """expanding"""
     # Add the next <horizon> predicted steps of validation data to the training data and remove it from the validation data
     X_train_tensor = torch.cat((X_train_tensor, X_val_tensor[:horizon]), dim=0)
@@ -329,7 +332,7 @@ def expandingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_t
     reestimated_model, _, _, _ = train_NN(model,
                                           trainLoader,
                                           totalEpochs=epochs,
-                                          lr=lr,
+                                          max_lr=max_lr,
                                           device=device,
                                           save_best=False,
                                           reestimate=True)
@@ -337,7 +340,7 @@ def expandingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_t
     return X_train_tensor, X_val_tensor, y_train_tensor, y_val_tensor, reestimated_model
 
 
-def rollingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, lr, device, horizon):
+def rollingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_tensor, model, batchSize, epochs, max_lr, device, horizon):
     """rolling"""
     # Add the next <horizon> predicted steps of validation data to the training data, remove it from the validation data and remove the first <horizon> steps of training data
     X_train_tensor = torch.cat((X_train_tensor, X_val_tensor[:horizon]), dim=0)
@@ -358,7 +361,7 @@ def rollingWindowPytorch(X_train_tensor, y_train_tensor, X_val_tensor, y_val_ten
     reestimated_model, _, _, _ = train_NN(model,
                                           trainLoader,
                                           totalEpochs=epochs,
-                                          lr=lr,
+                                          max_lr=max_lr,
                                           device=device,
                                           save_best=False,
                                           reestimate=True)
