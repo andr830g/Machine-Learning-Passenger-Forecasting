@@ -52,3 +52,75 @@ nMAE: 0.258, MAPE: 0.65, nRMSE: 0.329
 Val metrics:
 nMAE: 0.295, MAPE: 0.746, nRMSE: 0.384
 ------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: True, Diff: 1
+Best hyperparameters:
+lags: [1, 4, 8, 20, 140]
+n_estimators 50, alpha L1: 0.0, eta: 0.1
+Train metrics:
+nMAE: 0.213, MAPE: 0.356, nRMSE: 0.288
+Val metrics:
+nMAE: 0.194, MAPE: 0.366, nRMSE: 0.254
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: True, Diff: None
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+n_estimators 100, alpha L1: 0.5, eta: 0.1
+Train metrics:
+nMAE: 0.11, MAPE: 0.168, nRMSE: 0.155
+Val metrics:
+nMAE: 0.118, MAPE: 0.163, nRMSE: 0.171
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: False, Diff: 1
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+n_estimators 100, alpha L1: 0.3, eta: 0.05
+Train metrics:
+nMAE: 0.206, MAPE: 0.355, nRMSE: 0.277
+Val metrics:
+nMAE: 0.194, MAPE: 0.368, nRMSE: 0.257
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: False, Diff: None
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+n_estimators 100, alpha L1: 0.0, eta: 0.05
+Train metrics:
+nMAE: 0.114, MAPE: 0.183, nRMSE: 0.16
+Val metrics:
+nMAE: 0.121, MAPE: 0.187, nRMSE: 0.172
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: True, Diff: 1
+Best hyperparameters:
+lags: [1, 20, 140]
+n_estimators 250, alpha L1: 0.2, eta: 0.05
+Train metrics:
+nMAE: 0.192, MAPE: 0.316, nRMSE: 0.26
+Val metrics:
+nMAE: 0.158, MAPE: 0.345, nRMSE: 0.21
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: True, Diff: None
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+n_estimators 100, alpha L1: 0.3, eta: 0.1
+Train metrics:
+nMAE: 0.089, MAPE: 0.129, nRMSE: 0.122
+Val metrics:
+nMAE: 0.099, MAPE: 0.124, nRMSE: 0.143
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: False, Diff: 1
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+n_estimators 20, alpha L1: 0.0, eta: 0.2
+Train metrics:
+nMAE: 0.198, MAPE: 0.339, nRMSE: 0.263
+Val metrics:
+nMAE: 0.168, MAPE: 0.303, nRMSE: 0.223
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: False, Diff: None
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+n_estimators 50, alpha L1: 0.1, eta: 0.1
+Train metrics:
+nMAE: 0.096, MAPE: 0.152, nRMSE: 0.13
+Val metrics:
+nMAE: 0.099, MAPE: 0.144, nRMSE: 0.143
+------------------------------------------------------------------------------
