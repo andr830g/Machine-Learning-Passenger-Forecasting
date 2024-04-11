@@ -1,0 +1,54 @@
+Window: fixed, Line: 1A, Lags: False, Drop C: True, Drop W: False, Diff: 1
+Best hyperparameters:
+lags: None
+n_estimators 5, alpha L1: 0.2, eta: 0.3
+Train metrics:
+nMAE: 0.63, MAPE: 0.971, nRMSE: 0.806
+Val metrics:
+nMAE: 0.638, MAPE: 1.228, nRMSE: 0.85
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: True, Drop W: False, Diff: None
+Best hyperparameters:
+lags: None
+n_estimators 10, alpha L1: 0.3, eta: 0.2
+Train metrics:
+nMAE: 0.389, MAPE: 1.037, nRMSE: 0.494
+Val metrics:
+nMAE: 0.409, MAPE: 1.451, nRMSE: 0.526
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: True, Diff: 1
+Best hyperparameters:
+lags: None
+n_estimators 20, alpha L1: 0.3, eta: 0.2
+Train metrics:
+nMAE: 0.595, MAPE: 0.924, nRMSE: 0.781
+Val metrics:
+nMAE: 0.562, MAPE: 1.259, nRMSE: 0.747
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: True, Diff: None
+Best hyperparameters:
+lags: None
+n_estimators 10, alpha L1: 0.0, eta: 0.2
+Train metrics:
+nMAE: 0.342, MAPE: 0.942, nRMSE: 0.422
+Val metrics:
+nMAE: 0.35, MAPE: 1.249, nRMSE: 0.436
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: False, Diff: 1
+Best hyperparameters:
+lags: None
+n_estimators 100, alpha L1: 0.2, eta: 0.1
+Train metrics:
+nMAE: 0.533, MAPE: 0.882, nRMSE: 0.7
+Val metrics:
+nMAE: 0.605, MAPE: 1.361, nRMSE: 0.803
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: False, Diff: None
+Best hyperparameters:
+lags: None
+n_estimators 10, alpha L1: 0.1, eta: 0.3
+Train metrics:
+nMAE: 0.258, MAPE: 0.65, nRMSE: 0.329
+Val metrics:
+nMAE: 0.295, MAPE: 0.746, nRMSE: 0.384
+------------------------------------------------------------------------------
