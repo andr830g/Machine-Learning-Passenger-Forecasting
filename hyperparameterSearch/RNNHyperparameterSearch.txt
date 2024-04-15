@@ -1,0 +1,140 @@
+Window: fixed, Line: 1A, Lags: False, Drop C: True, Drop W: False, Diff: True
+Best hyperparameters:
+lags: []
+hidden size: 20, layers: 2, dropout: 0.5, bidirectional: True
+batch size: 480, epochs: 50, max_lr: 0.001
+Train metrics:
+nMAE: 0.657, MAPE: 1.035, nRMSE: 0.839
+Val metrics:
+nMAE: 0.636, MAPE: 1.125, nRMSE: 0.831
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: True, Drop W: False, Diff: False
+Best hyperparameters:
+lags: []
+hidden size: 80, layers: 2, dropout: 0.5, bidirectional: True
+batch size: 32, epochs: 75, max_lr: 0.001
+Train metrics:
+nMAE: 0.421, MAPE: 1.119, nRMSE: 0.529
+Val metrics:
+nMAE: 0.411, MAPE: 1.53, nRMSE: 0.525
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: True, Diff: True
+Best hyperparameters:
+lags: []
+hidden size: 40, layers: 2, dropout: 0.25, bidirectional: True
+batch size: 32, epochs: 75, max_lr: 0.1
+Train metrics:
+nMAE: 0.564, MAPE: 1.095, nRMSE: 0.722
+Val metrics:
+nMAE: 0.549, MAPE: 1.416, nRMSE: 0.73
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: True, Diff: False
+Best hyperparameters:
+lags: []
+hidden size: 80, layers: 2, dropout: 0.75, bidirectional: True
+batch size: 704, epochs: 30, max_lr: 0.001
+Train metrics:
+nMAE: 0.351, MAPE: 0.888, nRMSE: 0.433
+Val metrics:
+nMAE: 0.345, MAPE: 1.178, nRMSE: 0.419
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: False, Diff: True
+Best hyperparameters:
+lags: []
+hidden size: 80, layers: 2, dropout: 0.1, bidirectional: True
+batch size: 704, epochs: 30, max_lr: 0.001
+Train metrics:
+nMAE: 0.626, MAPE: 0.998, nRMSE: 0.802
+Val metrics:
+nMAE: 0.538, MAPE: 1.081, nRMSE: 0.697
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: False, Drop C: False, Drop W: False, Diff: False
+Best hyperparameters:
+lags: []
+hidden size: 80, layers: 2, dropout: 0.1, bidirectional: True
+batch size: 704, epochs: 100, max_lr: 0.001
+Train metrics:
+nMAE: 0.301, MAPE: 0.732, nRMSE: 0.379
+Val metrics:
+nMAE: 0.308, MAPE: 0.87, nRMSE: 0.398
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: True, Diff: True
+Best hyperparameters:
+lags: [140]
+hidden size: 60, layers: 3, dropout: 0.25, bidirectional: True
+batch size: 480, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.225, MAPE: 0.353, nRMSE: 0.325
+Val metrics:
+nMAE: 0.194, MAPE: 0.268, nRMSE: 0.26
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: True, Diff: False
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+hidden size: 80, layers: 3, dropout: 0.1, bidirectional: True
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.13, MAPE: 0.195, nRMSE: 0.192
+Val metrics:
+nMAE: 0.116, MAPE: 0.164, nRMSE: 0.167
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: False, Diff: True
+Best hyperparameters:
+lags: [140]
+hidden size: 60, layers: 2, dropout: 0.5, bidirectional: False
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.241, MAPE: 0.4, nRMSE: 0.347
+Val metrics:
+nMAE: 0.192, MAPE: 0.304, nRMSE: 0.258
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: True, Drop W: False, Diff: False
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+hidden size: 60, layers: 3, dropout: 0.5, bidirectional: False
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.141, MAPE: 0.207, nRMSE: 0.208
+Val metrics:
+nMAE: 0.123, MAPE: 0.173, nRMSE: 0.172
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: True, Diff: True
+Best hyperparameters:
+lags: [1, 4, 8, 20, 140]
+hidden size: 100, layers: 3, dropout: 0.5, bidirectional: False
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.237, MAPE: 0.41, nRMSE: 0.314
+Val metrics:
+nMAE: 0.18, MAPE: 0.348, nRMSE: 0.248
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: True, Diff: False
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+hidden size: 100, layers: 3, dropout: 0.1, bidirectional: True
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.101, MAPE: 0.143, nRMSE: 0.139
+Val metrics:
+nMAE: 0.097, MAPE: 0.13, nRMSE: 0.14
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: False, Diff: True
+Best hyperparameters:
+lags: [1, 20, 40, 60, 80, 100, 120, 140]
+hidden size: 40, layers: 3, dropout: 0.25, bidirectional: True
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.251, MAPE: 0.422, nRMSE: 0.344
+Val metrics:
+nMAE: 0.184, MAPE: 0.376, nRMSE: 0.245
+------------------------------------------------------------------------------
+Window: fixed, Line: 1A, Lags: True, Drop C: False, Drop W: False, Diff: False
+Best hyperparameters:
+lags: [20, 40, 60, 80, 100, 120, 140]
+hidden size: 100, layers: 3, dropout: 0.25, bidirectional: True
+batch size: 32, epochs: 100, max_lr: 0.0001
+Train metrics:
+nMAE: 0.107, MAPE: 0.16, nRMSE: 0.147
+Val metrics:
+nMAE: 0.102, MAPE: 0.131, nRMSE: 0.144
+------------------------------------------------------------------------------
