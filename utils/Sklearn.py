@@ -4,6 +4,7 @@ from utils.tools import *
 from utils.metrics import Time
 from IPython.display import clear_output
 import warnings
+from copy import copy
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -446,3 +447,47 @@ def sklearnForecast(X_train, y_train, X_val, y_val, model,
     y_val_pred = formatFittedValues(y_val_pred, y_val)
     return model, y_train_pred, y_val_pred
 
+
+"""
+Feature Importance
+"""
+
+def loco_feature_importance(X_train, y_train, X_val, y_val, 
+                            model, laglist, horizon, differentiation, 
+                            scalar, exog_scalar, window_type, window_size, use_exog, interval):
+    # estimate base model
+    _, y_train_pred_base, y_val_pred_base = sklearnForecast(
+            differentiation=differentiation, lags=laglist, window_type=window_type, window_size=window_size,
+            interval=interval, horizon=horizon, 
+            use_exog=use_exog, scalar=scalar, exog_scalar=exog_scalar,
+            X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val, model=model)
+
+    trainMAE_base = nMAE(y=y_train, yhat=y_train_pred_base)
+    valMAE_base = nMAE(y=y_val, yhat=y_val_pred_base)
+    print('Train nMAE:', trainMAE_base)
+    print('Val nMAE:', valMAE_base)
+
+    # estimate feature importance
+    fi_loco_train = {}
+    fi_loco_val = {}
+    for feature in list(X_train.columns) + laglist:
+        lags = copy(laglist)
+        if isinstance(feature, int):
+            lags.remove(feature)
+        else:
+            X_train_LOCO = X_train.drop(feature, axis=1)
+            X_val_LOCO = X_val.drop(feature, axis=1)
+    
+        # estimate loco model
+        _, y_train_pred_loco, y_val_pred_loco = sklearnForecast(
+            differentiation=differentiation, lags=lags, window_type=window_type, window_size=window_size,
+            interval=interval, horizon=horizon, 
+            use_exog=use_exog, scalar=scalar, exog_scalar=exog_scalar,
+            X_train=X_train_LOCO, y_train=y_train, X_val=X_val_LOCO, y_val=y_val, model=model)
+    
+        trainMAE_LOCO = nMAE(y=y_train, yhat=y_train_pred_loco)
+        valMAE_LOCO = nMAE(y=y_val, yhat=y_val_pred_loco)
+
+        fi_loco_train[f'{feature}'] = trainMAE_LOCO/trainMAE_base - 1
+        fi_loco_val[f'{feature}'] = valMAE_LOCO/valMAE_base - 1
+    return fi_loco_train, fi_loco_val

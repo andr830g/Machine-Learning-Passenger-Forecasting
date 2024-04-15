@@ -143,3 +143,12 @@ def plotLossCurves(train_loss_list, val_loss_list, epoch_range):
     plt.ylabel("Loss")
     plt.legend()
     plt.show()
+
+def plotFeatureImportance(importance_dict):
+    importance_sorted = sorted(importance_dict.items(), key=lambda x: x[1], reverse=False)
+    importance_features, importance_scores = zip(*importance_sorted)
+
+    fig, ax = plt.subplots(1, figsize=(10, 8))
+    ax.barh(importance_features, importance_scores)
+    ax.set_title('Validation Feature Importance')
+    plt.show()
