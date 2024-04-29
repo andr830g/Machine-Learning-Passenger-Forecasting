@@ -6,3 +6,4 @@ data/
 
 /envconfig.ini
 anatomy.bin
+*.bin
