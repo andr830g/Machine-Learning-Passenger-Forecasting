@@ -88,6 +88,9 @@ def fixedWindowWithLags(X_train, y_train, X_val, y_val, model,
             X_horizon = X_val.loc[time:time+horizon]
         else:
             X_horizon = None
+        
+        # only forecast a horizon with data available
+        horizon = min(X_horizon.shape[0], horizon)
 
         if interval is None:
             preds = forecaster.predict(steps=horizon, exog=X_horizon, last_window=last_window)
@@ -175,6 +178,9 @@ def expandingWindowWithLags(X_train, y_train, X_val, y_val, model,
             X_horizon = X_val.loc[time:time+horizon]
         else:
             X_horizon = None
+        
+        # only forecast a horizon with data available
+        horizon = min(X_horizon.shape[0], horizon)
         
         if interval is None:
             preds = forecaster.predict(steps=horizon, exog=X_horizon)
@@ -302,6 +308,9 @@ def rollingWindowWithLags(X_train, y_train, X_val, y_val, model,
             X_horizon = X_val.loc[time:time+horizon]
         else:
             X_horizon = None
+        
+        # only forecast a horizon with data available
+        horizon = min(X_horizon.shape[0], horizon)
 
         if interval is None:
             preds = forecaster.predict(steps=horizon, exog=X_horizon)
