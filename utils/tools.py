@@ -51,8 +51,8 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
     fig, ax = plt.subplots(2, 2, figsize=(14, 12))
     fig.set_tight_layout('h_pad')
 
-    ax[0, 0].plot(y_train_true.index, y_train_true, color='red', label='gt')
-    ax[0, 0].plot(y_train_true.index, y_train_pred, color='blue', alpha=0.5, label='fitted')
+    ax[0, 0].plot(y_train_true.index, y_train_true, color='steelblue', alpha=1, label='GT')
+    ax[0, 0].plot(y_train_true.index, y_train_pred, color='darkorange', alpha=0.75, label='Fit')
     ax[0, 0].set_title('Fitted Training Data')
     ax[0, 0].legend(loc='upper right')
     ax[0, 0].set_xlim(y_train_true.index.start, y_train_true.index.stop)
@@ -60,8 +60,8 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
     ax[0, 0].set_xlabel('Date')
     ax[0, 0].set_ylabel('Passenger Count')
 
-    ax[0, 1].plot(y_val_true.index, y_val_true, color='red', label='gt')
-    ax[0, 1].plot(y_val_true.index, y_val_pred, color='blue', alpha=0.5, label='pred')
+    ax[0, 1].plot(y_val_true.index, y_val_true, color='steelblue', alpha=1, label='GT')
+    ax[0, 1].plot(y_val_true.index, y_val_pred, color='darkorange', alpha=0.8, label='Predicted')
     if y_val_lower is not None and y_val_upper is not None: # add prediction interval if relevant
         containsNull = y_val_lower.isnull().values.any() and y_val_upper.isnull().values.any()
         if not containsNull:
