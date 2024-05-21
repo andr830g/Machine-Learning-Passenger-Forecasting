@@ -8,7 +8,7 @@ import copy
 from IPython.display import clear_output
 from utils.tools import *
 from utils.metrics import Time
-from utils.DataSplitter import getTrainData, performTrainValSplit, subsetColumns
+from utils.DataSplitter import getTrainData, getTestData, performTrainValSplit, subsetColumns
 from utils.ColumnEnum import Columns
 
 """
@@ -29,7 +29,7 @@ def selectFeatures(X_train, X_val, lags, exog, lagColName):
     return X_train[columns_to_keep], X_val[columns_to_keep]
 
 
-def setupData(aggLevel, multiplier, line, diff, lags, dropWeather, dropCalendar):
+def setupData(aggLevel, multiplier, line, diff, lags, dropWeather, dropCalendar, val=True):
     lags = [lag*multiplier for lag in lags]
 
     if diff:
@@ -45,27 +45,32 @@ def setupData(aggLevel, multiplier, line, diff, lags, dropWeather, dropCalendar)
         lagColName = "lag"
 
     true_target_column = Columns.target_passengersBoarding.value
-    df = getTrainData(agglevel=aggLevel, diff=diff)
+    if val:
+        df = getTrainData(agglevel=aggLevel, diff=diff)
+        train, test = performTrainValSplit(df)
+    else:
+        train = getTrainData(agglevel=aggLevel, diff=diff)
+        test = getTestData(agglevel=aggLevel, diff=diff)
 
-    train, val = performTrainValSplit(df)
+
     train_linesubset = train[train["line"] == line].reset_index(drop=True)
-    val_linesubset = val[val["line"] == line].reset_index(drop=True)
-    val_linesubset.index += train_linesubset.index.stop
+    test_linesubset = test[test["line"] == line].reset_index(drop=True)
+    test_linesubset.index += train_linesubset.index.stop
 
     X_train = subsetColumns(train_linesubset, dropCategorical=True, dropLags=False, dropWeather=dropWeather, dropCalendar=dropCalendar,
                                             dropSpecific=[target_column] + drop_cols).reset_index(drop=True)
-    X_val = subsetColumns(val_linesubset, dropCategorical=True, dropLags=False, dropWeather=dropWeather, dropCalendar=dropCalendar,
+    X_test = subsetColumns(test_linesubset, dropCategorical=True, dropLags=False, dropWeather=dropWeather, dropCalendar=dropCalendar,
                                             dropSpecific=[target_column] + drop_cols).reset_index(drop=True)
 
     y_train = train_linesubset[target_column].reset_index(drop=True)
-    y_val = val_linesubset[target_column].reset_index(drop=True)
+    y_test = test_linesubset[target_column].reset_index(drop=True)
     y_train_true = train_linesubset[true_target_column].reset_index(drop=True)
-    y_val_true = val_linesubset[true_target_column].reset_index(drop=True)
-    y_val_true.index += y_train.index.stop
+    y_test_true = test_linesubset[true_target_column].reset_index(drop=True)
+    y_test_true.index += y_train.index.stop
 
-    X_train, X_val = selectFeatures(X_train, X_val, lags=lags, exog=True, lagColName=lagColName)
+    X_train, X_test = selectFeatures(X_train, X_test, lags=lags, exog=True, lagColName=lagColName)
 
-    return X_train, y_train, X_val, y_val, y_train_true, y_val_true, lagColName, multiplier, train_linesubset, val_linesubset
+    return X_train, y_train, X_test, y_test, y_train_true, y_test_true, lagColName, multiplier, train_linesubset, test_linesubset
 
 
 def evaluate_NN(model, loader, criterion, device):

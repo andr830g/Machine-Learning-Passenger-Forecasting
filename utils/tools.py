@@ -43,9 +43,9 @@ def inverseDifferencing(y_pred_diff, y_true, horizon):
 Plotting
 """
 
-def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_val_lower=None, y_val_upper=None, 
-                          trainDateCol=[], valDateCol=[], dates=True, print_accuracy=False):
-    assert (len(trainDateCol) > 0 and len(valDateCol) > 0) or not dates, 'must input trainDateCol and valDateCol or else set dates=False'
+def plotFitAndPredictions(y_train_pred, y_test_pred, y_train_true, y_test_true, y_test_lower=None, y_test_upper=None, 
+                          trainDateCol=[], testDateCol=[], dates=True, print_accuracy=False):
+    assert (len(trainDateCol) > 0 and len(testDateCol) > 0) or not dates, 'must input trainDateCol and testDateCol or else set dates=False'
 
     text_constant = 19
     fig, ax = plt.subplots(2, 2, figsize=(14, 12))
@@ -60,16 +60,16 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
     ax[0, 0].set_xlabel('Date')
     ax[0, 0].set_ylabel('Passenger Count')
 
-    ax[0, 1].plot(y_val_true.index, y_val_true, color='steelblue', alpha=1, label='GT')
-    ax[0, 1].plot(y_val_true.index, y_val_pred, color='darkorange', alpha=0.8, label='Predicted')
-    if y_val_lower is not None and y_val_upper is not None: # add prediction interval if relevant
-        containsNull = y_val_lower.isnull().values.any() and y_val_upper.isnull().values.any()
+    ax[0, 1].plot(y_test_true.index, y_test_true, color='steelblue', alpha=1, label='GT')
+    ax[0, 1].plot(y_test_true.index, y_test_pred, color='darkorange', alpha=0.8, label='Predicted')
+    if y_test_lower is not None and y_test_upper is not None: # add prediction interval if relevant
+        containsNull = y_test_lower.isnull().values.any() and y_test_upper.isnull().values.any()
         if not containsNull:
-            ax[0, 1].fill_between(y_val_true.index, y1=y_val_lower, y2=y_val_upper, color='orange', alpha=0.5, label='interval')
-    ax[0, 1].set_title('Predicted Validation Data')
+            ax[0, 1].fill_between(y_test_true.index, y1=y_test_lower, y2=y_test_upper, color='orange', alpha=0.5, label='interval')
+    ax[0, 1].set_title('Predicted Test Data')
     ax[0, 1].legend(loc='upper right')
-    ax[0, 1].set_xlim(y_val_true.index.start, y_val_true.index.stop)
-    ax[0, 1].set_ylim(np.min(y_val_true), np.max(y_val_true) + np.max(y_val_true)//6)
+    ax[0, 1].set_xlim(y_test_true.index.start, y_test_true.index.stop)
+    ax[0, 1].set_ylim(np.min(y_test_true), np.max(y_test_true) + np.max(y_test_true)//6)
     ax[0, 1].set_xlabel('Date')
     ax[0, 1].set_ylabel('Passenger Count')
 
@@ -82,11 +82,11 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
     ax[1, 0].set_ylabel('Passenger Count Residuals')
     ax[1, 0].axhline(y=0, color='red') 
 
-    val_res = y_val_pred - y_val_true
-    ax[1, 1].plot(y_val_true.index, val_res, color='black')
-    ax[1, 1].set_title('Validation Residuals')
-    ax[1, 1].set_xlim(y_val_true.index.start, y_val_true.index.stop)
-    ax[1, 1].set_ylim(np.min(val_res), np.max(val_res) + np.max(val_res)//6)
+    test_res = y_test_pred - y_test_true
+    ax[1, 1].plot(y_test_true.index, test_res, color='black')
+    ax[1, 1].set_title('Test Residuals')
+    ax[1, 1].set_xlim(y_test_true.index.start, y_test_true.index.stop)
+    ax[1, 1].set_ylim(np.min(test_res), np.max(test_res) + np.max(test_res)//6)
     ax[1, 1].set_xlabel('Date')
     ax[1, 1].set_ylabel('Passenger Count Residuals')
     ax[1, 1].axhline(y=0, color='red') 
@@ -98,17 +98,17 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
         ax[0, 0].set_xticks([i for i in range(y_train_true.index.start, y_train_true.index.stop, dateInterval)])
         ax[0, 0].set_xticklabels(trainDateCol[::dateInterval], rotation=90)
 
-        dateInterval = len(y_val_true)//365*24
-        ax[0, 1].set_xticks([i for i in range(y_val_true.index.start, y_val_true.index.stop, dateInterval)])
-        ax[0, 1].set_xticklabels(valDateCol[::dateInterval], rotation=90)
+        dateInterval = len(y_test_true)//365*24
+        ax[0, 1].set_xticks([i for i in range(y_test_true.index.start, y_test_true.index.stop, dateInterval)])
+        ax[0, 1].set_xticklabels(testDateCol[::dateInterval], rotation=90)
 
         dateInterval = len(train_res)//365*24
         ax[1, 0].set_xticks([i for i in range(y_train_true.index.start, y_train_true.index.stop, dateInterval)])
         ax[1, 0].set_xticklabels(trainDateCol[::dateInterval], rotation=90)
 
-        dateInterval = len(val_res)//365*24
-        ax[1, 1].set_xticks([i for i in range(y_val_true.index.start, y_val_true.index.stop, dateInterval)])
-        ax[1, 1].set_xticklabels(valDateCol[::dateInterval], rotation=90)
+        dateInterval = len(test_res)//365*24
+        ax[1, 1].set_xticks([i for i in range(y_test_true.index.start, y_test_true.index.stop, dateInterval)])
+        ax[1, 1].set_xticklabels(testDateCol[::dateInterval], rotation=90)
 
     ax[0, 0].text(y_train_true.index.start + (y_train_true.index.stop - y_train_true.index.start)//54, np.max(y_train_true) + np.max(y_train_true)//text_constant,
                f'Train nMAE: {nMAE(y=y_train_true, yhat=y_train_pred)}\n'
@@ -116,10 +116,10 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
                + f'Train nRMSE: {nRMSE(y=y_train_true, yhat=y_train_pred)}',
                bbox=dict(facecolor='white', alpha=0.5),
                fontsize=9)
-    ax[0, 1].text(y_val_true.index.start + (y_val_true.index.stop - y_val_true.index.start)//54, np.max(y_val_true) + np.max(y_val_true)//text_constant,
-               f'Val nMAE: {nMAE(y=y_val_true, yhat=y_val_pred)}\n'
-               + f'Val MAPE: {MAPE(y=y_val_true, yhat=y_val_pred)}\n'
-               + f'Val nRMSE: {nRMSE(y=y_val_true, yhat=y_val_pred)}',
+    ax[0, 1].text(y_test_true.index.start + (y_test_true.index.stop - y_test_true.index.start)//54, np.max(y_test_true) + np.max(y_test_true)//text_constant,
+               f'Test nMAE: {nMAE(y=y_test_true, yhat=y_test_pred)}\n'
+               + f'Test MAPE: {MAPE(y=y_test_true, yhat=y_test_pred)}\n'
+               + f'Test nRMSE: {nRMSE(y=y_test_true, yhat=y_test_pred)}',
                bbox=dict(facecolor='white', alpha=0.5),
                fontsize=9)
     
@@ -130,9 +130,9 @@ def plotFitAndPredictions(y_train_pred, y_val_pred, y_train_true, y_val_true, y_
         print('Train MAPE:', MAPE(y=y_train_true, yhat=y_train_pred))
         print('Train nRMSE:', nRMSE(y=y_train_true, yhat=y_train_pred))
         print('---')
-        print('Val nMAE:', nMAE(y=y_val_true, yhat=y_val_pred))
-        print('Val MAPE:', MAPE(y=y_val_true, yhat=y_val_pred))
-        print('Val nRMSE:', nRMSE(y=y_val_true, yhat=y_val_pred))
+        print('Test nMAE:', nMAE(y=y_test_true, yhat=y_test_pred))
+        print('Test MAPE:', MAPE(y=y_test_true, yhat=y_test_pred))
+        print('Test nRMSE:', nRMSE(y=y_test_true, yhat=y_test_pred))
 
 
 def plotLossCurves(train_loss_list, val_loss_list, epoch_range):
