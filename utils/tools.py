@@ -150,5 +150,5 @@ def plotFeatureImportance(importance_dict, model_name):
 
     fig, ax = plt.subplots(1, figsize=(10, 8))
     ax.barh(importance_features, importance_scores)
-    ax.set_title(f'{model_name} Validation Feature Importance')
+    ax.set_title(f'{model_name}')
     plt.show()
