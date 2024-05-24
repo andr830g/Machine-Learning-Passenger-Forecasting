@@ -145,10 +145,11 @@ def plotLossCurves(train_loss_list, val_loss_list, epoch_range):
     plt.show()
 
 def plotFeatureImportance(importance_dict, model_name):
-    importance_sorted = sorted(importance_dict.items(), key=lambda x: x[1], reverse=False)
+    importance_sorted = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)
     importance_features, importance_scores = zip(*importance_sorted)
 
-    fig, ax = plt.subplots(1, figsize=(10, 8))
+    fig, ax = plt.subplots(1, figsize=(5, 8))
     ax.barh(importance_features, importance_scores)
     ax.set_title(f'{model_name}')
+    ax.grid(axis='y')
     plt.show()
