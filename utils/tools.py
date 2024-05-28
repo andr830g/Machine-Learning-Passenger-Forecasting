@@ -73,7 +73,7 @@ def plotFitAndPredictions(y_train_pred, y_test_pred, y_train_true, y_test_true, 
     if y_test_lower is not None and y_test_upper is not None: # add prediction interval if relevant
         containsNull = y_test_lower.isnull().values.any() and y_test_upper.isnull().values.any()
         if not containsNull:
-            ax[0, 1].fill_between(y_test_true.index, y1=y_test_lower, y2=y_test_upper, color='orange', alpha=0.5, label='interval')
+            ax[0, 1].fill_between(y_test_true.index, y1=y_test_lower, y2=y_test_upper, color='sandybrown', alpha=0.3, label='interval')
     ax[0, 1].set_title('Predicted Test Data')
     ax[0, 1].legend(loc='upper right')
     #ax[0, 1].set_xlim(y_test_true.index.start, y_test_true.index.stop)
