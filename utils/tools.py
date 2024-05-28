@@ -44,8 +44,16 @@ Plotting
 """
 
 def plotFitAndPredictions(y_train_pred, y_test_pred, y_train_true, y_test_true, y_test_lower=None, y_test_upper=None, 
-                          trainDateCol=[], testDateCol=[], dates=True, print_accuracy=False):
+                          trainDateCol=[], testDateCol=[], dates=True, print_accuracy=False, xlim_lower=None, xlim_upper=None):
     assert (len(trainDateCol) > 0 and len(testDateCol) > 0) or not dates, 'must input trainDateCol and testDateCol or else set dates=False'
+
+    if xlim_lower is None or xlim_upper is None:
+        showAllDates = True
+        xlim_lower = y_test_true.index.start
+        xlim_upper = y_test_true.index.stop
+    else:
+        showAllDates = False
+
 
     text_constant = 19
     fig, ax = plt.subplots(2, 2, figsize=(14, 12))
@@ -68,7 +76,9 @@ def plotFitAndPredictions(y_train_pred, y_test_pred, y_train_true, y_test_true, 
             ax[0, 1].fill_between(y_test_true.index, y1=y_test_lower, y2=y_test_upper, color='orange', alpha=0.5, label='interval')
     ax[0, 1].set_title('Predicted Test Data')
     ax[0, 1].legend(loc='upper right')
-    ax[0, 1].set_xlim(y_test_true.index.start, y_test_true.index.stop)
+    #ax[0, 1].set_xlim(y_test_true.index.start, y_test_true.index.stop)
+    ax[0, 1].set_xlim(xlim_lower, xlim_upper)
+
     ax[0, 1].set_ylim(np.min(y_test_true), np.max(y_test_true) + np.max(y_test_true)//6)
     ax[0, 1].set_xlabel('Date')
     ax[0, 1].set_ylabel('Passenger Count')
@@ -98,9 +108,15 @@ def plotFitAndPredictions(y_train_pred, y_test_pred, y_train_true, y_test_true, 
         ax[0, 0].set_xticks([i for i in range(y_train_true.index.start, y_train_true.index.stop, dateInterval)])
         ax[0, 0].set_xticklabels(trainDateCol[::dateInterval], rotation=90)
 
-        dateInterval = len(y_test_true)//365*24
-        ax[0, 1].set_xticks([i for i in range(y_test_true.index.start, y_test_true.index.stop, dateInterval)])
-        ax[0, 1].set_xticklabels(testDateCol[::dateInterval], rotation=90)
+        if showAllDates == True:
+            dateInterval = len(y_test_true)//365*24
+        else:
+            dateInterval = (xlim_upper - xlim_lower)//7
+        #ax[0, 1].set_xticks([i for i in range(y_test_true.index.start, y_test_true.index.stop, dateInterval)])
+        #ax[0, 1].set_xticklabels(testDateCol[::dateInterval], rotation=90)
+        ax[0, 1].set_xticks([i for i in range(xlim_lower, xlim_upper, dateInterval)])
+        #ax[0, 1].set_xticklabels(testDateCol[::dateInterval], rotation=90)
+        ax[0, 1].set_xticklabels(testDateCol.loc[xlim_lower:xlim_upper-1][::dateInterval], rotation=90)
 
         dateInterval = len(train_res)//365*24
         ax[1, 0].set_xticks([i for i in range(y_train_true.index.start, y_train_true.index.stop, dateInterval)])
@@ -116,7 +132,13 @@ def plotFitAndPredictions(y_train_pred, y_test_pred, y_train_true, y_test_true, 
                + f'Train nRMSE: {nRMSE(y=y_train_true, yhat=y_train_pred)}',
                bbox=dict(facecolor='white', alpha=0.5),
                fontsize=9)
-    ax[0, 1].text(y_test_true.index.start + (y_test_true.index.stop - y_test_true.index.start)//54, np.max(y_test_true) + np.max(y_test_true)//text_constant,
+    #ax[0, 1].text(y_test_true.index.start + (y_test_true.index.stop - y_test_true.index.start)//54, np.max(y_test_true) + np.max(y_test_true)//text_constant,
+    #           f'Test nMAE: {nMAE(y=y_test_true, yhat=y_test_pred)}\n'
+    #           + f'Test MAPE: {MAPE(y=y_test_true, yhat=y_test_pred)}\n'
+    #           + f'Test nRMSE: {nRMSE(y=y_test_true, yhat=y_test_pred)}',
+    #           bbox=dict(facecolor='white', alpha=0.5),
+    #           fontsize=9)
+    ax[0, 1].text(xlim_lower + (xlim_upper - xlim_lower)//54, np.max(y_test_true) + np.max(y_test_true)//text_constant,
                f'Test nMAE: {nMAE(y=y_test_true, yhat=y_test_pred)}\n'
                + f'Test MAPE: {MAPE(y=y_test_true, yhat=y_test_pred)}\n'
                + f'Test nRMSE: {nRMSE(y=y_test_true, yhat=y_test_pred)}',
