@@ -35,13 +35,13 @@ def setupData(aggLevel, multiplier, line, diff, lags, dropWeather, dropCalendar,
     if diff:
         # Input diff, output diff
         target_column = Columns.target_diff.value
-        drop_cols = [Columns.calendar_Q1.value, Columns.calendar_mon.value, Columns.calendar_workdayPlan.value, Columns.target_passengersBoarding.value]
+        drop_cols = []
         lagColName = "diffLag"
         
     if not diff:
         # Input passengers, output passengers
         target_column = Columns.target_passengersBoarding.value
-        drop_cols = [Columns.calendar_Q1.value, Columns.calendar_mon.value, Columns.calendar_workdayPlan.value]
+        drop_cols = []
         lagColName = "lag"
 
     true_target_column = Columns.target_passengersBoarding.value
