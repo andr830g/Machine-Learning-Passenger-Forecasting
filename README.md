@@ -4,6 +4,8 @@ Bachelor Thesis: 6. semester, Aarhus University
 Andreas Hyldegaard Hansen 202106123,
 Andreas Skiby Andersen 202107332
 
+<img src="assets/Passenger_Count" width="400"/> <img src="assets/XGB_Forecast" width="400"/>
+
 ## Abstract
 Implementation of Automatic Passenger Counting (APC) systems in public transportation allows
 public transport providers to collect and analyze Big Data, which is crucial for modern demand
@@ -36,9 +38,12 @@ mance Based Shapley Values (PBSV); a new variant of SHAP values. For XGBoost, PB
 that including daily and weekly lags, information about peak hour and type of bus schedule has
 the highest importance, while weather variables have no significant importance.
 
+<img src="assets/XGB_SHAP" width="400"/> <img src="assets/XGB_PBSV" width="400"/>
+
 ## GitHub
-### Report
-The final report of the thesis is the "Report.pdf" file.
+### assets
++ Contains the final report of the thesis in the "Report.pdf" file.
++ Contains images for "README.md"
 
 ### hyperparameterSearch
 Contains output files from hyperparameter search for optimal hyperparameters for each variant of each model.
