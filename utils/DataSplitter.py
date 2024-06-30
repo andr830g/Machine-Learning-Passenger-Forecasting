@@ -115,6 +115,13 @@ def subsetColumns(df, dropCategorical=True, dropLags=True, dropWeather=True, dro
                   dropSpecific=[], keepSpecific=[]):
     
     keepOnlySpecificCols = len(keepSpecific) > 0
+    import numpy as np
+
+    for hour in range(0, 23+1):
+        df[f'hour_{hour}'] = df[Columns.categorical_hour.value].apply(lambda x: 1 if x == hour else 0)
+    
+    for month in range(1, 12+1):
+        df[f'month_{month}'] = df[Columns.categorical_month.value].apply(lambda x: 1 if x == month else 0)
 
     # drop categorical variables
     if dropCategorical and not keepOnlySpecificCols:
